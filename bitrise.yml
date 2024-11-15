@@ -1,0 +1,65 @@
+---
+    format_version: '13'
+    default_step_lib_source: https://github.com/bitrise-io/bitrise-steplib.git
+    project_type: ios
+    pipelines:
+      pipeline-env:
+        stages:
+        - stage-1: {}
+        - stage-2: {}
+    stages:
+      stage-1:
+        workflows:
+        - set-env: {}
+      stage-2:
+        workflows:
+        - read-env: {}
+    workflows:
+      read-env:
+        steps:
+        - git-clone@8: {}
+        - script@1:
+            inputs:
+            - script_file_path:
+            - content: |-
+                #!/usr/bin/env bash
+                set -e
+                set -o pipefail
+                set -x
+
+                bitrise run process-env -c $BITRISE_SOURCE_DIR/bitrise.yml
+      set-env:
+        steps:
+        - script@1:
+            inputs:
+            - script_file_path:
+            - content: |-
+                #!/usr/bin/env bash
+                set -e
+                set -o pipefail
+                set -x
+    
+                envman add --key VARIANT --value This-env-var-was-set-by-set-env-workflow
+        - share-pipeline-variable@1:
+            title: Configure next pipeline stage
+            inputs:
+            - variables: VARIANT
+      process-env:
+        steps:
+        - script@1:
+            inputs:
+            - script_file_path:
+            - content: |-
+                #!/usr/bin/env bash
+                set -e
+                set -o pipefail
+                set -x
+    
+                echo ======
+                echo $VARIANT
+                echo ======
+    meta:
+      bitrise.io:
+        machine_type_id: g2.mac.large
+        stack: osx-xcode-15.4.x
+    
